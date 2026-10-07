@@ -8,4 +8,6 @@ spring:
     redis:
       host: localhost
       port: 6379
-
+app:
+  redis:
+    uri: ${REDIS_URI:redis://localhost:6379}

@@ -23,8 +23,13 @@ public class RideRedisSubscriber {
                 new RedisPubSubAdapter<String, String>() {
 
                     @Override
-                    public void message(String channel, String message) {
+                    public void smessage(String channel, String message) {
                         handle(channel, message);
+                    }
+
+                    @Override
+                    public void ssubscribed(String channel, long count) {
+                        log.info("Subscribed to Redis shard channel: {}", channel);
                     }
                 }
         );
@@ -39,6 +44,8 @@ public class RideRedisSubscriber {
             log.warn("Ignoring invalid Redis channel {}", channel);
             return;
         }
+
+        log.info("Received location update for ride {}", rideId);
 
         forwarder.forward(rideId, message);
     }

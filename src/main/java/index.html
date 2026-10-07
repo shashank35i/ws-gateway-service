@@ -1,0 +1,39 @@
+<!doctype html>
+<input id="ride" value="143">
+<button onclick="go()">Subscribe</button>
+<button onclick="stop()">Unsubscribe</button>
+<pre id="log"></pre>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script>
+    let client, sub;
+    const log = m => document.getElementById('log').textContent += m + '\n';
+
+    function go() {
+        if (client) client.deactivate();              // no duplicate clients
+        const id = document.getElementById('ride').value.trim();
+
+        client = new StompJs.Client({
+            brokerURL: 'ws://localhost:8082/ws',
+            reconnectDelay: 3000,
+            onConnect: () => {
+                sub = client.subscribe('/topic/ride/' + id, m => {
+                    let latency = '';
+                    try { latency = ' (' + (Date.now() - JSON.parse(m.body).timestamp) + ' ms)'; } catch (e) {}
+                    log(m.body + latency);
+                });
+                log('subscribed to ride ' + id);
+            },
+            onStompError: f => log('STOMP error: ' + f.headers['message']),
+            onWebSocketError: () => log('websocket error'),
+            onWebSocketClose: () => log('socket closed')
+        });
+        client.activate();
+    }
+
+    function stop() {
+        if (sub) sub.unsubscribe();
+        if (client) client.deactivate();
+        sub = client = null;
+        log('unsubscribed');
+    }
+</script>
